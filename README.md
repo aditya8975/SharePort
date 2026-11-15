@@ -1,4 +1,4 @@
-# Dropcode
+# SharePort
 
 Send files between any two devices with a 6-digit code or QR scan.
 
