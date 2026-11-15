@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SharePort — send files with a code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1E7D3; --card:#FAF4E6; --ink:#2B2318; --muted:#6E6250;
+  --rust:#9C4221; --brass:#8A7B4F; --line:#C9B999; --err:#8C2E1B;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --paper:#1C1711; --card:#241E15; --ink:#EEE4CC; --muted:#AE9E80;
+         --rust:#D97A54; --brass:#B6A772; --line:#4A412E; --err:#E8886D; color-scheme:dark; }
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;padding:48px 24px;
+  background:var(--paper);color:var(--ink);
+  background-image:
+    repeating-linear-gradient(transparent 0 38px, color-mix(in srgb, var(--brass) 14%, transparent) 38px 39px),
+    radial-gradient(ellipse at top left, color-mix(in srgb, var(--brass) 8%, transparent), transparent 55%);
+  font-family:'Spectral',Georgia,serif;
+  display:grid;place-items:start center;position:relative;
+}
+main{width:100%;max-width:860px;position:relative}
+
+/* corner stamp / credit */
+.credit{
+  position:absolute;top:-30px;right:-6px;
+  font-family:'Spectral',serif;font-size:.72rem;letter-spacing:.04em;
+  color:var(--card);background:var(--rust);
+  padding:7px 14px 7px 12px;border-radius:2px;
+  text-decoration:none;transform:rotate(3deg);
+  box-shadow:1px 2px 0 color-mix(in srgb, var(--ink) 35%, transparent);
+  border:1px solid color-mix(in srgb, var(--ink) 25%, var(--rust));
+}
+.credit:hover{transform:rotate(0deg)}
+.credit:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media(max-width:600px){.credit{position:static;display:inline-block;margin-bottom:18px;transform:rotate(-1deg)}}
+
+header{border-bottom:3px double var(--line);padding-bottom:18px;margin-bottom:28px}
+.mark{font-size:.78rem;letter-spacing:.22em;color:var(--brass);margin:0 0 8px}
+h1{
+  font-family:'Fraunces',serif;font-optical-sizing:auto;
+  font-size:clamp(2.4rem,6.4vw,3.8rem);font-weight:600;
+  letter-spacing:-.01em;line-height:1.02;margin:0 0 10px;
+}
+.sub{color:var(--muted);margin:0;font-size:1.05rem;max-width:46ch}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+section{
+  background:var(--card);border:1px solid var(--line);border-radius:3px;
+  padding:26px 24px;position:relative;
+}
+section::before{
+  content:'';position:absolute;top:0;right:0;width:0;height:0;
+  border-style:solid;border-width:0 22px 22px 0;
+  border-color:transparent var(--paper) transparent transparent;
+  filter:drop-shadow(-1px 1px 0 var(--line));
+}
+h2{
+  font-family:'Fraunces',serif;font-weight:600;font-size:1.3rem;
+  margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--line);
+}
+
+.drop{
+  border:2px dashed var(--brass);border-radius:2px;padding:30px 16px;
+  text-align:center;cursor:pointer;transition:.15s;background:color-mix(in srgb, var(--brass) 4%, transparent);
+}
+.drop:hover,.drop.over,.drop:focus-visible{border-color:var(--rust);background:color-mix(in srgb, var(--rust) 7%, transparent);outline:none}
+.drop b{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:1.08rem}
+.drop span{color:var(--muted);font-size:.9rem;font-style:italic}
+
+.list{margin:12px 0 0;padding:0;list-style:none;font-size:.92rem}
+.list li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line)}
+.list li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list li span:last-child,.list a{color:var(--muted);white-space:nowrap}
+.list a{color:var(--rust);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
+
+button{
+  font-family:'Spectral',serif;font-weight:600;font-size:1rem;border:1px solid var(--ink);
+  border-radius:2px;padding:12px 20px;background:var(--ink);color:var(--card);
+  cursor:pointer;width:100%;margin-top:16px;letter-spacing:.02em;transition:.15s;
+}
+button:hover:not(:disabled){background:var(--rust);border-color:var(--rust)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:14px;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--rust);transition:width .15s}
+
+.result{display:none;text-align:center}
+.code{
+  font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.2rem,8vw,3rem);
+  letter-spacing:.12em;color:var(--rust);
+  width:180px;height:180px;margin:10px auto;display:grid;place-items:center;
+  border:3px solid var(--rust);border-radius:50%;transform:rotate(-4deg);
+  cursor:pointer;position:relative;
+}
+.code::after{content:'';position:absolute;inset:8px;border:1px dashed var(--rust);border-radius:50%}
+.result img{width:128px;height:128px;border:1px solid var(--line);padding:8px;background:#fff;margin-top:14px}
+.note{color:var(--muted);font-size:.88rem;margin:10px 0 0;font-style:italic}
+
+input{
+  font-family:'Fraunces',serif;font-size:1.7rem;font-weight:600;letter-spacing:.3em;
+  text-align:center;width:100%;padding:14px 12px;border:1px solid var(--line);
+  border-bottom:2px solid var(--brass);border-radius:2px;background:transparent;color:var(--ink);
+}
+input::placeholder{color:color-mix(in srgb, var(--muted) 60%, transparent)}
+input:focus{border-color:var(--rust);outline:none}
+.err{color:var(--err);font-size:.9rem;min-height:1.2em;margin:10px 0 0;font-style:italic}
+</style>
+</head>
+<body>
+<main>
+  <a class="credit" href="https://adkatareport.onrender.com/" target="_blank" rel="noopener">credit</a>
+  <header>
+    <p class="mark">Parcel &amp; Post, No. 6</p>
+    <h1>Send files, anywhere.</h1>
+    <p class="sub">No sign-up. Up to 500 MB a parcel. Delivered by code, cleared away in ten minutes.</p>
+  </header>
+  <div class="grid">
+    <section>
+      <h2>Send</h2>
+      <div id="send-form">
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose files to send">
+          <b>Drop files here</b><span>or tap to choose</span>
+        </div>
+        <input type="file" id="file" multiple hidden>
+        <ul class="list" id="picked"></ul>
+        <div class="bar" id="bar"><i id="fill"></i></div>
+        <button id="send" disabled>Send</button>
+        <p class="err" id="send-err" role="alert"></p>
+      </div>
+      <div class="result" id="result">
+        <p class="note">Give the receiver this code, or let them scan:</p>
+        <div class="code" id="code"></div>
+        <img id="qr" alt="QR code for this transfer">
+        <p class="note" id="timer"></p>
+        <button id="again">Send more files</button>
+      </div>
+    </section>
+    <section>
+      <h2>Receive</h2>
+      <input id="enter" inputmode="numeric" maxlength="6" placeholder="000000" aria-label="6-digit code" autocomplete="off">
+      <button id="get">Find files</button>
+      <p class="err" id="get-err" role="alert"></p>
+      <ul class="list" id="found"></ul>
+    </section>
+  </div>
+</main>
+<script>
+const MAX = 500 * 1024 * 1024;
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => n < 1024 ** 2 ? (n / 1024).toFixed(0) + ' KB' : (n / 1024 ** 2).toFixed(1) + ' MB';
+let picked = [], tick;
+
+function renderPicked() {
+  const total = picked.reduce((s, f) => s + f.size, 0);
+  $('picked').innerHTML = '';
+  picked.forEach((f) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span></span><span>' + fmt(f.size) + '</span>';
+    li.firstChild.textContent = f.name;
+    $('picked').appendChild(li);
+  });
+  const tooBig = total > MAX;
+  $('send-err').textContent = tooBig ? 'Total is ' + fmt(total) + '. The limit is 500 MB.' : '';
+  $('send').disabled = !picked.length || tooBig;
+}
+function pick(files) { picked = [...files]; renderPicked(); }
+
+$('drop').onclick = () => $('file').click();
+$('drop').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
+$('file').onchange = (e) => pick(e.target.files);
+['dragover', 'dragenter'].forEach((ev) => $('drop').addEventListener(ev, (e) => { e.preventDefault(); $('drop').classList.add('over'); }));
+['dragleave', 'drop'].forEach((ev) => $('drop').addEventListener(ev, (e) => { e.preventDefault(); $('drop').classList.remove('over'); }));
+$('drop').addEventListener('drop', (e) => pick(e.dataTransfer.files));
+
+$('send').onclick = () => {
+  const fd = new FormData();
+  picked.forEach((f) => fd.append('files', f));
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload');
+  $('bar').style.display = 'block';
+  $('send').disabled = true;
+  $('send').textContent = 'Uploading…';
+  const t0 = Date.now();
+  xhr.upload.onprogress = (e) => {
+    if (!e.lengthComputable) return;
+    $('fill').style.width = (e.loaded / e.total * 100) + '%';
+    const secs = (Date.now() - t0) / 1000, speed = e.loaded / Math.max(secs, 0.5);
+    const eta = Math.ceil((e.total - e.loaded) / speed);
+    $('send').textContent = Math.round(e.loaded / e.total * 100) + '% · ' + (speed / 1024 ** 2).toFixed(1) + ' MB/s · ' + eta + 's left';
+  };
+  xhr.onload = () => {
+    let r = {}; try { r = JSON.parse(xhr.responseText); } catch {}
+    $('send').textContent = 'Get my code';
+    if (xhr.status !== 200) { $('send-err').textContent = r.error || 'Upload failed. Try again.'; $('send').disabled = false; return; }
+    $('send-form').style.display = 'none';
+    $('result').style.display = 'block';
+    $('code').textContent = r.code;
+    $('qr').src = '/api/qr/' + r.code;
+    let left = r.expiresInSeconds;
+    clearInterval(tick);
+    tick = setInterval(() => {
+      left--;
+      if (left <= 0) { clearInterval(tick); $('timer').textContent = 'Expired. Files are deleted.'; return; }
+      $('timer').textContent = 'Deletes in ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+    }, 1000);
+  };
+  xhr.onerror = () => { $('send-err').textContent = 'Connection lost. Try again.'; $('send').disabled = false; $('send').textContent = 'Get my code'; };
+  xhr.send(fd);
+};
+$('again').onclick = () => {
+  clearInterval(tick); picked = []; renderPicked(); $('fill').style.width = '0';
+  $('bar').style.display = 'none'; $('result').style.display = 'none'; $('send-form').style.display = 'block';
+};
+
+async function find() {
+  const code = $('enter').value.trim();
+  $('found').innerHTML = ''; $('get-err').textContent = '';
+  if (!/^\d{6}$/.test(code)) { $('get-err').textContent = 'Enter the 6-digit code.'; return; }
+  const res = await fetch('/api/transfer/' + code);
+  const data = await res.json();
+  if (!res.ok) { $('get-err').textContent = data.error; return; }
+  data.files.forEach((f) => {
+    const li = document.createElement('li');
+    const name = document.createElement('span'); name.textContent = f.name + ' (' + fmt(f.size) + ')';
+    const a = document.createElement('a'); a.textContent = 'Download'; a.href = '/api/download/' + code + '/' + f.id;
+    li.append(name, a); $('found').appendChild(li);
+  });
+}
+$('get').onclick = find;
+$('enter').oninput = () => {
+  $('enter').value = $('enter').value.replace(/\D/g, '');
+  if ($('enter').value.length === 6) find();
+};
+$('code').title = 'Click to copy';
+$('code').onclick = () => navigator.clipboard && navigator.clipboard.writeText($('code').textContent).then(() => {
+  $('timer').textContent = 'Code copied';
+});
+$('enter').onkeydown = (e) => { if (e.key === 'Enter') find(); };
+const q = new URLSearchParams(location.search).get('code');
+if (q) { $('enter').value = q; find(); }
+</script>
+</body>
+</html>
