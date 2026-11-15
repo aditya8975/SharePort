@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SharePort — send files with a code</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,47 +17,57 @@
   :root{ --paper:#1C1711; --card:#241E15; --ink:#EEE4CC; --muted:#AE9E80;
          --rust:#D97A54; --brass:#B6A772; --line:#4A412E; --err:#E8886D; color-scheme:dark; }
 }
+:root{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 *{box-sizing:border-box}
 body{
-  margin:0;min-height:100vh;padding:48px 24px;
+  margin:0;min-height:100%;
+  padding:clamp(20px,6vw,48px) clamp(14px,5vw,24px);
+  padding-top:max(clamp(20px,6vw,48px), env(safe-area-inset-top));
+  padding-bottom:max(clamp(20px,6vw,48px), env(safe-area-inset-bottom));
   background:var(--paper);color:var(--ink);
   background-image:
     repeating-linear-gradient(transparent 0 38px, color-mix(in srgb, var(--brass) 14%, transparent) 38px 39px),
     radial-gradient(ellipse at top left, color-mix(in srgb, var(--brass) 8%, transparent), transparent 55%);
   font-family:'Spectral',Georgia,serif;
   display:grid;place-items:start center;position:relative;
+  overflow-x:hidden;
 }
-main{width:100%;max-width:860px;position:relative}
+main{width:100%;max-width:860px;position:relative;margin-inline:auto}
+@media(min-width:1400px){main{max-width:980px}}
 
 /* corner stamp / credit */
 .credit{
-  position:absolute;top:-30px;right:-6px;
+  position:absolute;top:max(-30px, calc(-30px - env(safe-area-inset-top)));right:-6px;
   font-family:'Spectral',serif;font-size:.72rem;letter-spacing:.04em;
   color:var(--card);background:var(--rust);
   padding:7px 14px 7px 12px;border-radius:2px;
   text-decoration:none;transform:rotate(3deg);
   box-shadow:1px 2px 0 color-mix(in srgb, var(--ink) 35%, transparent);
   border:1px solid color-mix(in srgb, var(--ink) 25%, var(--rust));
+  max-width:min(78vw, 280px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .credit:hover{transform:rotate(0deg)}
 .credit:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-@media(max-width:600px){.credit{position:static;display:inline-block;margin-bottom:18px;transform:rotate(-1deg)}}
+@media(max-width:680px){.credit{position:static;display:inline-block;margin-bottom:18px;transform:rotate(-1deg);max-width:100%}}
 
-header{border-bottom:3px double var(--line);padding-bottom:18px;margin-bottom:28px}
-.mark{font-size:.78rem;letter-spacing:.22em;color:var(--brass);margin:0 0 8px}
+header{border-bottom:3px double var(--line);padding-bottom:clamp(12px,3vw,18px);margin-bottom:clamp(20px,5vw,28px)}
+.mark{font-size:.72rem;letter-spacing:.18em;color:var(--brass);margin:0 0 8px}
 h1{
   font-family:'Fraunces',serif;font-optical-sizing:auto;
-  font-size:clamp(2.4rem,6.4vw,3.8rem);font-weight:600;
-  letter-spacing:-.01em;line-height:1.02;margin:0 0 10px;
+  font-size:clamp(1.9rem,8vw,3.8rem);font-weight:600;
+  letter-spacing:-.01em;line-height:1.04;margin:0 0 10px;
+  word-break:break-word;
 }
-.sub{color:var(--muted);margin:0;font-size:1.05rem;max-width:46ch}
+.sub{color:var(--muted);margin:0;font-size:clamp(.92rem,2.6vw,1.05rem);max-width:46ch}
 
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,3vw,20px)}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
 
 section{
   background:var(--card);border:1px solid var(--line);border-radius:3px;
-  padding:26px 24px;position:relative;
+  padding:clamp(18px,4vw,26px) clamp(16px,4vw,24px);position:relative;
+  min-width:0;
 }
 section::before{
   content:'';position:absolute;top:0;right:0;width:0;height:0;
@@ -71,7 +81,7 @@ h2{
 }
 
 .drop{
-  border:2px dashed var(--brass);border-radius:2px;padding:30px 16px;
+  border:2px dashed var(--brass);border-radius:2px;padding:clamp(22px,6vw,30px) 16px;
   text-align:center;cursor:pointer;transition:.15s;background:color-mix(in srgb, var(--brass) 4%, transparent);
 }
 .drop:hover,.drop.over,.drop:focus-visible{border-color:var(--rust);background:color-mix(in srgb, var(--rust) 7%, transparent);outline:none}
@@ -79,14 +89,14 @@ h2{
 .drop span{color:var(--muted);font-size:.9rem;font-style:italic}
 
 .list{margin:12px 0 0;padding:0;list-style:none;font-size:.92rem}
-.list li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line)}
-.list li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.list li span:last-child,.list a{color:var(--muted);white-space:nowrap}
-.list a{color:var(--rust);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
+.list li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px;padding:9px 0;border-bottom:1px dotted var(--line)}
+.list li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 140px}
+.list li span:last-child,.list a{color:var(--muted);white-space:nowrap;flex:0 0 auto}
+.list a{color:var(--rust);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor;padding:4px 0}
 
 button{
   font-family:'Spectral',serif;font-weight:600;font-size:1rem;border:1px solid var(--ink);
-  border-radius:2px;padding:12px 20px;background:var(--ink);color:var(--card);
+  border-radius:2px;padding:13px 20px;min-height:48px;background:var(--ink);color:var(--card);
   cursor:pointer;width:100%;margin-top:16px;letter-spacing:.02em;transition:.15s;
 }
 button:hover:not(:disabled){background:var(--rust);border-color:var(--rust)}
@@ -98,19 +108,20 @@ button:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
 
 .result{display:none;text-align:center}
 .code{
-  font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.2rem,8vw,3rem);
-  letter-spacing:.12em;color:var(--rust);
-  width:180px;height:180px;margin:10px auto;display:grid;place-items:center;
+  font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.7rem,7vw,3rem);
+  letter-spacing:.1em;color:var(--rust);
+  width:clamp(148px,42vw,180px);height:clamp(148px,42vw,180px);
+  margin:10px auto;display:grid;place-items:center;
   border:3px solid var(--rust);border-radius:50%;transform:rotate(-4deg);
   cursor:pointer;position:relative;
 }
 .code::after{content:'';position:absolute;inset:8px;border:1px dashed var(--rust);border-radius:50%}
-.result img{width:128px;height:128px;border:1px solid var(--line);padding:8px;background:#fff;margin-top:14px}
+.result img{width:clamp(104px,34vw,128px);height:clamp(104px,34vw,128px);border:1px solid var(--line);padding:8px;background:#fff;margin-top:14px;max-width:100%}
 .note{color:var(--muted);font-size:.88rem;margin:10px 0 0;font-style:italic}
 
 input{
-  font-family:'Fraunces',serif;font-size:1.7rem;font-weight:600;letter-spacing:.3em;
-  text-align:center;width:100%;padding:14px 12px;border:1px solid var(--line);
+  font-family:'Fraunces',serif;font-size:clamp(1.3rem,6vw,1.7rem);font-weight:600;letter-spacing:.25em;
+  text-align:center;width:100%;padding:14px 8px;border:1px solid var(--line);
   border-bottom:2px solid var(--brass);border-radius:2px;background:transparent;color:var(--ink);
 }
 input::placeholder{color:color-mix(in srgb, var(--muted) 60%, transparent)}
@@ -120,7 +131,7 @@ input:focus{border-color:var(--rust);outline:none}
 </head>
 <body>
 <main>
-  <a class="credit" href="https://adkatareport.onrender.com/" target="_blank" rel="noopener">credit</a>
+  <a class="credit" href="https://adkatareport.onrender.com/" target="_blank" rel="noopener">Credits</a>
   <header>
     <p class="mark">Parcel &amp; Post, No. 6</p>
     <h1>Send files, anywhere.</h1>
